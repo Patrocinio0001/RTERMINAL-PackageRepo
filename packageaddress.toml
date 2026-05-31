@@ -1,1 +1,5 @@
-git=https://github.com
+git=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/git.rexe
+deepterminal=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/deepterminal.rexe
+pip=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/pip.rexe
+python3=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/python3.rexe
+curl=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/curl.rexe
