@@ -1176,6 +1176,17 @@ function Guild:fetchMember(userId)
   return member
 end
 
+function Guild:fetchMembers(limit)
+  local raw = self.client.rest:get(Routes.guildMembers(self.id) .. "?limit=" .. tostring(limit or 100))
+  local rows = {}
+  for _, item in ipairs(raw or {}) do
+    local member = GuildMember.new(self.client, self.id, item)
+    self.members:set(member.id, member)
+    table.insert(rows, member)
+  end
+  return rows
+end
+
 function Guild:fetchRoles()
   local raw = self.client.rest:get(Routes.guildRoles(self.id))
   local rows = {}
