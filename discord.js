@@ -244,6 +244,105 @@ local function normalizePayload(payload)
   return body
 end
 
+local function list(...)
+  local output = {}
+  for index = 1, select("#", ...) do
+    table.insert(output, select(index, ...))
+  end
+  return output
+end
+
+local function Intents(...)
+  return list(...)
+end
+
+local function userIds(users)
+  local ids = {}
+  for _, user in ipairs(users or {}) do
+    if user and user.id then
+      table.insert(ids, tostring(user.id))
+    end
+  end
+  return ids
+end
+
+local function mentionText(users)
+  local mentions = {}
+  for _, id in ipairs(userIds(users)) do
+    table.insert(mentions, "<@" .. tostring(id) .. ">")
+  end
+  return table.concat(mentions, " ")
+end
+
+local function joinText(...)
+  local parts = {}
+  for index = 1, select("#", ...) do
+    local value = tostring(select(index, ...) or "")
+    if value ~= "" then
+      table.insert(parts, value)
+    end
+  end
+  return table.concat(parts, " ")
+end
+
+local function pickNonBotUsersFromMessages(messages, limit)
+  local picked = {}
+  local seen = {}
+  for _, message in ipairs(messages or {}) do
+    local author = message.author
+    if author and author.id and not author.bot and not seen[author.id] then
+      seen[author.id] = true
+      table.insert(picked, author)
+    end
+    if #picked >= (tonumber(limit) or 2) then
+      break
+    end
+  end
+  return picked
+end
+
+local function pickNonBotUsers(client, channel, limit)
+  limit = tonumber(limit) or 2
+  local picked = {}
+  local seen = {}
+
+  local function addUser(user)
+    if user and user.id and not user.bot and not seen[user.id] then
+      seen[user.id] = true
+      table.insert(picked, user)
+    end
+  end
+
+  local okMessages, messages = pcall(function()
+    return channel:messages():fetch()
+  end)
+  if okMessages then
+    for _, message in ipairs(messages or {}) do
+      addUser(message.author)
+      if #picked >= limit then
+        return picked
+      end
+    end
+  end
+
+  local guildId = channel and channel.raw and channel.raw.guild_id
+  if guildId and client then
+    local okMembers, members = pcall(function()
+      return client:fetchGuild(guildId):fetchMembers(100)
+    end)
+    if okMembers then
+      for _, member in ipairs(members or {}) do
+        addUser(member.user)
+        if #picked >= limit then
+          return picked
+        end
+      end
+    end
+  end
+
+  return picked
+end
+
 local function parse(value)
   if value == nil or tostring(value) == "" then
     return nil
@@ -324,6 +423,18 @@ function Collection:values()
     table.insert(output, value)
   end
   return output
+end
+
+local function bindMethods(instance, prototype, names)
+  for _, name in ipairs(names or {}) do
+    instance[name] = function(first, ...)
+      if first == instance then
+        return prototype[name](instance, ...)
+      end
+      return prototype[name](instance, first, ...)
+    end
+  end
+  return instance
 end
 
 local Routes = {
@@ -490,7 +601,7 @@ User.__index = User
 
 function User.new(client, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     id = data.id,
     username = data.username,
@@ -499,6 +610,7 @@ function User.new(client, data)
     bot = data.bot == true,
     raw = data,
   }, User)
+  return bindMethods(self, User, { "send" })
 end
 
 function User:send(payload)
@@ -516,7 +628,7 @@ function Message.new(client, data)
     channel = client.channels:get(data.channel_id) or TextChannel.new(client, { id = data.channel_id })
     client.channels:set(data.channel_id, channel)
   end
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     id = data.id,
     channelId = data.channel_id,
@@ -528,6 +640,7 @@ function Message.new(client, data)
     raw = data,
     channel = channel,
   }, Message)
+  return bindMethods(self, Message, { "reply", "edit", "delete", "react" })
 end
 
 function Message:reply(payload)
@@ -558,12 +671,13 @@ TextChannel.__index = TextChannel
 
 function TextChannel.new(client, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     id = data.id,
     name = data.name,
     raw = data,
   }, TextChannel)
+  return bindMethods(self, TextChannel, { "send", "bulkSend", "sendTyping", "createWebhook", "createThread", "joinThread", "leaveThread", "messages" })
 end
 
 function TextChannel:send(payload)
@@ -626,7 +740,8 @@ local EmbedBuilder = {}
 EmbedBuilder.__index = EmbedBuilder
 
 function EmbedBuilder.new(data)
-  return setmetatable({ data = data or {} }, EmbedBuilder)
+  local self = setmetatable({ data = data or {} }, EmbedBuilder)
+  return bindMethods(self, EmbedBuilder, { "setTitle", "setDescription", "setColor", "setURL", "setTimestamp", "setAuthor", "setFooter", "setImage", "setThumbnail", "addFields", "toJSON" })
 end
 
 function EmbedBuilder:setTitle(value)
@@ -691,13 +806,14 @@ AttachmentBuilder.__index = AttachmentBuilder
 
 function AttachmentBuilder.new(urlOrData, options)
   options = options or {}
-  return setmetatable({
+  local self = setmetatable({
     data = {
       attachment = urlOrData,
       name = options.name,
       description = options.description,
     },
   }, AttachmentBuilder)
+  return bindMethods(self, AttachmentBuilder, { "setName", "setDescription", "toJSON" })
 end
 
 function AttachmentBuilder:setName(value)
@@ -720,7 +836,8 @@ ButtonBuilder.__index = ButtonBuilder
 function ButtonBuilder.new(data)
   data = data or {}
   data.type = ComponentType.Button
-  return setmetatable({ data = data }, ButtonBuilder)
+  local self = setmetatable({ data = data }, ButtonBuilder)
+  return bindMethods(self, ButtonBuilder, { "setCustomId", "setLabel", "setStyle", "setURL", "setDisabled", "setEmoji", "toJSON" })
 end
 
 function ButtonBuilder:setCustomId(value)
@@ -765,7 +882,8 @@ function StringSelectMenuBuilder.new(data)
   data = data or {}
   data.type = ComponentType.StringSelect
   data.options = data.options or {}
-  return setmetatable({ data = data }, StringSelectMenuBuilder)
+  local self = setmetatable({ data = data }, StringSelectMenuBuilder)
+  return bindMethods(self, StringSelectMenuBuilder, { "setCustomId", "setPlaceholder", "setMinValues", "setMaxValues", "addOptions", "toJSON" })
 end
 
 function StringSelectMenuBuilder:setCustomId(value)
@@ -805,7 +923,8 @@ TextInputBuilder.__index = TextInputBuilder
 function TextInputBuilder.new(data)
   data = data or {}
   data.type = ComponentType.TextInput
-  return setmetatable({ data = data }, TextInputBuilder)
+  local self = setmetatable({ data = data }, TextInputBuilder)
+  return bindMethods(self, TextInputBuilder, { "setCustomId", "setLabel", "setStyle", "setRequired", "setPlaceholder", "setValue", "toJSON" })
 end
 
 function TextInputBuilder:setCustomId(value)
@@ -849,7 +968,8 @@ function ActionRowBuilder.new(data)
   data = data or {}
   data.type = ComponentType.ActionRow
   data.components = data.components or {}
-  return setmetatable({ data = data }, ActionRowBuilder)
+  local self = setmetatable({ data = data }, ActionRowBuilder)
+  return bindMethods(self, ActionRowBuilder, { "addComponents", "toJSON" })
 end
 
 function ActionRowBuilder:addComponents(...)
@@ -870,7 +990,8 @@ ModalBuilder.__index = ModalBuilder
 function ModalBuilder.new(data)
   data = data or {}
   data.components = data.components or {}
-  return setmetatable({ data = data }, ModalBuilder)
+  local self = setmetatable({ data = data }, ModalBuilder)
+  return bindMethods(self, ModalBuilder, { "setCustomId", "setTitle", "addComponents", "toJSON" })
 end
 
 function ModalBuilder:setCustomId(value)
@@ -902,7 +1023,8 @@ function SlashCommandBuilder.new(data)
   data = data or {}
   data.type = data.type or ApplicationCommandType.ChatInput
   data.options = data.options or {}
-  return setmetatable({ data = data }, SlashCommandBuilder)
+  local self = setmetatable({ data = data }, SlashCommandBuilder)
+  return bindMethods(self, SlashCommandBuilder, { "setName", "setDescription", "addStringOption", "addIntegerOption", "addBooleanOption", "addNumberOption", "addUserOption", "addChannelOption", "addRoleOption", "setDefaultMemberPermissions", "setDMPermission", "toJSON" })
 end
 
 function SlashCommandBuilder:setName(value)
@@ -1011,7 +1133,7 @@ Interaction.__index = Interaction
 
 function Interaction.new(client, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     id = data.id,
     token = data.token,
@@ -1021,6 +1143,7 @@ function Interaction.new(client, data)
     user = data.user or (data.member and data.member.user),
     raw = data,
   }, Interaction)
+  return bindMethods(self, Interaction, { "reply", "deferReply", "update", "editReply", "deleteReply", "showModal" })
 end
 
 function Interaction:reply(payload)
@@ -1072,7 +1195,7 @@ Role.__index = Role
 
 function Role.new(client, guildId, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     guildId = guildId,
     id = data.id,
@@ -1081,6 +1204,7 @@ function Role.new(client, guildId, data)
     permissions = data.permissions,
     raw = data,
   }, Role)
+  return bindMethods(self, Role, { "edit", "delete" })
 end
 
 function Role:edit(payload)
@@ -1096,7 +1220,7 @@ GuildMember.__index = GuildMember
 
 function GuildMember.new(client, guildId, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     guildId = guildId,
     id = data.user and data.user.id or data.id,
@@ -1105,6 +1229,7 @@ function GuildMember.new(client, guildId, data)
     roles = data.roles or {},
     raw = data,
   }, GuildMember)
+  return bindMethods(self, GuildMember, { "edit", "kick", "ban", "addRole", "removeRole" })
 end
 
 function GuildMember:edit(payload)
@@ -1133,7 +1258,7 @@ Guild.__index = Guild
 
 function Guild.new(client, data)
   data = data or {}
-  return setmetatable({
+  local self = setmetatable({
     client = client,
     id = data.id,
     name = data.name,
@@ -1142,6 +1267,7 @@ function Guild.new(client, data)
     roles = Collection.new(),
     members = Collection.new(),
   }, Guild)
+  return bindMethods(self, Guild, { "fetch", "fetchChannels", "createChannel", "fetchMember", "fetchMembers", "fetchRoles", "createRole", "fetchWebhooks" })
 end
 
 function Guild:fetch()
@@ -1231,7 +1357,7 @@ function Client.new(options)
   self.heartbeatCancel = nil
   self.channels = Collection.new()
   self.guilds = Collection.new()
-  return self
+  return bindMethods(self, Client, { "on", "once", "off", "emit", "login", "destroy", "fetchChannel", "send", "fetchGuild", "fetchUser", "registerGlobalCommands", "registerGuildCommands", "debug", "intentsValue" })
 end
 
 local WebhookClient = {}
@@ -1239,12 +1365,13 @@ WebhookClient.__index = WebhookClient
 
 function WebhookClient.new(options)
   options = options or {}
-  return setmetatable({
+  local self = setmetatable({
     id = options.id,
     token = options.token,
     url = options.url,
     rest = REST.new({ token = options.botToken }),
   }, WebhookClient)
+  return bindMethods(self, WebhookClient, { "route", "send", "editMessage", "deleteMessage" })
 end
 
 function WebhookClient:route(messageId)
@@ -1494,6 +1621,13 @@ end
 module.exports = {
   version = "rterminal-discord.js-0.3.0",
   API_VERSION = API_VERSION,
+  list = list,
+  Intents = Intents,
+  userIds = userIds,
+  mentionText = mentionText,
+  joinText = joinText,
+  pickNonBotUsersFromMessages = pickNonBotUsersFromMessages,
+  pickNonBotUsers = pickNonBotUsers,
   Client = Client,
   Collection = Collection,
   REST = REST,
