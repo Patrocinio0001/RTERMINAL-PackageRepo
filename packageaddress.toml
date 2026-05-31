@@ -3,3 +3,4 @@ deepterminal=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageR
 pip=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/pip.rexe
 python3=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/python3.rexe
 curl=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/curl.rexe
+npmpackage=discord.js=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/discord.js
