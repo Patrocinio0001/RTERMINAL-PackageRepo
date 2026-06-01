@@ -4,3 +4,5 @@ pip=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/
 python3=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/python3.rexe
 curl=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/curl.rexe
 npmpackage=discord.js=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/discord.js
+node=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/node.rexe
+npm=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/npm.rexe
