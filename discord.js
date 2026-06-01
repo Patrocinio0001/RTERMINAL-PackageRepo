@@ -210,15 +210,71 @@ local function merge(target, source)
   return target
 end
 
-local function json(value)
-  return JSON.stringify(value)
-end
-
 local function toJSON(value)
   if type(value) == "table" and type(value.toJSON) == "function" then
     return value:toJSON()
   end
   return value
+end
+
+local function escapeJSON(value)
+  value = tostring(value or "")
+  value = string.gsub(value, "\\", "\\\\")
+  value = string.gsub(value, "\"", "\\\"")
+  value = string.gsub(value, "\n", "\\n")
+  value = string.gsub(value, "\r", "\\r")
+  value = string.gsub(value, "\t", "\\t")
+  return "\"" .. value .. "\""
+end
+
+local function isArray(value)
+  if type(value) ~= "table" then
+    return false
+  end
+  local max = 0
+  local count = 0
+  for key in pairs(value) do
+    if type(key) ~= "number" or key < 1 or key % 1 ~= 0 then
+      return false
+    end
+    if key > max then
+      max = key
+    end
+    count = count + 1
+  end
+  return max == count
+end
+
+local function json(value)
+  value = toJSON(value)
+  local kind = type(value)
+  if kind == "nil" then
+    return "null"
+  elseif kind == "string" then
+    return escapeJSON(value)
+  elseif kind == "number" then
+    return tostring(value)
+  elseif kind == "boolean" then
+    return value and "true" or "false"
+  elseif kind == "table" then
+    if isArray(value) then
+      local parts = {}
+      for index = 1, #value do
+        table.insert(parts, json(value[index]))
+      end
+      return "[" .. table.concat(parts, ",") .. "]"
+    end
+
+    local parts = {}
+    for key, inner in pairs(value) do
+      if type(inner) ~= "function" and type(key) ~= "function" then
+        table.insert(parts, escapeJSON(key) .. ":" .. json(inner))
+      end
+    end
+    table.sort(parts)
+    return "{" .. table.concat(parts, ",") .. "}"
+  end
+  return "null"
 end
 
 local function arrayToJSON(values)
