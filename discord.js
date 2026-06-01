@@ -247,7 +247,8 @@ end
 local function list(...)
   local output = {}
   for index = 1, select("#", ...) do
-    table.insert(output, select(index, ...))
+    local value = select(index, ...)
+    table.insert(output, value)
   end
   return output
 end
@@ -792,7 +793,8 @@ end
 function EmbedBuilder:addFields(...)
   self.data.fields = self.data.fields or {}
   for index = 1, select("#", ...) do
-    table.insert(self.data.fields, select(index, ...))
+    local value = select(index, ...)
+    table.insert(self.data.fields, value)
   end
   return self
 end
@@ -908,7 +910,8 @@ end
 
 function StringSelectMenuBuilder:addOptions(...)
   for index = 1, select("#", ...) do
-    table.insert(self.data.options, toJSON(select(index, ...)))
+    local value = select(index, ...)
+    table.insert(self.data.options, toJSON(value))
   end
   return self
 end
@@ -975,7 +978,8 @@ end
 function ActionRowBuilder:addComponents(...)
   self.data.components = self.data.components or {}
   for index = 1, select("#", ...) do
-    table.insert(self.data.components, toJSON(select(index, ...)))
+    local value = select(index, ...)
+    table.insert(self.data.components, toJSON(value))
   end
   return self
 end
@@ -1007,7 +1011,8 @@ end
 function ModalBuilder:addComponents(...)
   self.data.components = self.data.components or {}
   for index = 1, select("#", ...) do
-    table.insert(self.data.components, toJSON(select(index, ...)))
+    local value = select(index, ...)
+    table.insert(self.data.components, toJSON(value))
   end
   return self
 end
