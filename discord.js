@@ -517,11 +517,12 @@ local REST = {}
 REST.__index = REST
 
 function REST.new(options)
-  return setmetatable({
+  local self = setmetatable({
     token = options and options.token or nil,
     baseUrl = options and options.baseUrl or DEFAULT_API,
     headers = options and options.headers or {},
   }, REST)
+  return bindMethods(self, REST, { "setToken", "request", "get", "post", "patch", "put", "delete" })
 end
 
 function REST:setToken(token)
