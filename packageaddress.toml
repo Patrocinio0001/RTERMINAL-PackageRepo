@@ -1,9 +1,9 @@
-git=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/git.rexe
-deepterminal=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/deepterminal.rexe
-pip=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/pip.rexe
-python3=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/python3.rexe
-curl=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/curl.rexe
+git=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/git.aen
+deepterminal=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/deepterminal.aen
+pip=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/pip.aen
+python3=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/python3.aen
+curl=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/curl.aen
 npmpackage=discord.js=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/discord.js
-node=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/node.rexe
-npm=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/npm.rexe
+node=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/node.aen
+npm=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/npm.aen
 npmpackage=roblox.js=https://raw.githubusercontent.com/Patrocinio0001/RTERMINAL-PackageRepo/refs/heads/main/roblox.js
